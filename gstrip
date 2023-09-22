@@ -1,0 +1,13 @@
+#!/bin/bash
+# Usage: Hello World Bash Shell Script Using Variables
+# Author: Justin Stein
+# -------------------------------------------------
+ 
+# Define bash shell variable called var 
+# Avoid spaces around the assignment operator (=)
+param="$*"
+
+echo "$param" \
+ | sed 's/modified://g' \
+ | sed 's/deleted://g' \
+ | xargs
