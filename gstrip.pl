@@ -12,61 +12,108 @@ my $modified_regex = qr/^\t(?:deleted:\s*)(.*)$/;
 my $deleted_regex = qr/^\t(?:modified:\s*)(.*)$/;
 my $untracked_regex = qr/^\t(?:)(.*)$/;
 
-my @new = ();
-my @modified = ();
-my @deleted = ();
-my @untracked = ();
-my @filenames = ();
+my %filetypes_to_arrays = (
+    # "UNSET" => []
+    "NEW" => []
+    , "MODIFIED" => []
+    , "DELETED" => []
+    , "UNTRACKED" => []
+);
 
-# Main subroutine
+my %filetype_labels = (
+    "NEW" => "new files:"
+    , "MODIFIED" => "modified:"
+    , "DELETED" => "deleted:"
+    , "UNTRACKED" => "untracked:"
+);
+
+my %filetype_color_codes = (
+    "NEW" => $staged
+    , "MODIFIED" => $unstaged
+    , "DELETED" => $unstaged
+    , "UNTRACKED" => $unstaged
+);
+
+my $current_filetype = "UNSET";
+
 sub main {
   while (<>) {
     if($_ =~ $new_regex) {
-      push @new, $1;
-      push @filenames, $1;
+      if($current_filetype ne "NEW" && $filetypes_to_arrays{$current_filetype}) {
+        # print "$current_filetype";
+        if($filetype_labels{$current_filetype}) {
+          print $default."\t".$filetype_labels{$current_filetype}
+        }
+
+        print array_to_string($filetype_color_codes{$current_filetype}, @{$filetypes_to_arrays{$current_filetype}});
+
+      }
+      push @{$filetypes_to_arrays{"NEW"}}, $1;
+      $current_filetype = "NEW";
 
     } elsif($_ =~ $modified_regex) {
-      push @modified, $1;
-      push @filenames, $1;
+      if($current_filetype ne "MODIFIED" && $filetypes_to_arrays{$current_filetype}) {
+        if($filetype_labels{$current_filetype}) {
+          print $default."\t".$filetype_labels{$current_filetype}
+        }
+
+        print array_to_string($filetype_color_codes{$current_filetype}, @{$filetypes_to_arrays{$current_filetype}});
+      }
+      push @{$filetypes_to_arrays{"MODIFIED"}}, $1;
+      $current_filetype = "MODIFIED";
 
     } elsif($_ =~ $deleted_regex) {
-      push @deleted, $1;
-      push @filenames, $1;
+      if($current_filetype ne "DELETED" && $filetypes_to_arrays{$current_filetype}) {
+        if($filetype_labels{$current_filetype}) {
+          print $default."\t".$filetype_labels{$current_filetype}
+        }
+
+        print array_to_string($filetype_color_codes{$current_filetype}, @{$filetypes_to_arrays{$current_filetype}});
+      }
+      push @{$filetypes_to_arrays{"DELETED"}}, $1;
+      $current_filetype = "DELETED";
 
     } elsif($_ =~ $untracked_regex) {
-      push @untracked, $1;
-      push @filenames, $1;
+       if($current_filetype ne "UNTRACKED" && $filetypes_to_arrays{$current_filetype}) {
+        if($filetype_labels{$current_filetype}) {
+          print $default."\t".$filetype_labels{$current_filetype}
+        }
+
+        print array_to_string($filetype_color_codes{$current_filetype}, @{$filetypes_to_arrays{$current_filetype}});
+      }
+      push @{$filetypes_to_arrays{"UNTRACKED"}}, $1;
+      $current_filetype = "UNTRACKED";
 
     } else {
-      if (@filenames) {
-        print to_string($staged, @filenames);
-        @filenames = ();
+       if($current_filetype ne "UNSET" && $filetypes_to_arrays{$current_filetype}) {
+        if($filetype_labels{$current_filetype}) {
+          print $default."\t".$filetype_labels{$current_filetype}
+        }
+        print array_to_string($filetype_color_codes{$current_filetype}, @{$filetypes_to_arrays{$current_filetype}});
       }
+      $current_filetype = "UNSET";
+
       print $default."$_";
     }
   }
-
-
 }
 
-sub escape_spaces {
-    my ($input_string) = @_;
-
-    # Replace spaces with the escape character
-    $input_string =~ s/ /\\ /g;
-
-    return $input_string;
-}
-
-sub to_string {
+sub array_to_string {
     my ($color, @array) = @_;
     my $text = $color."\t";
 
-    foreach my $filename (@filenames) {
-      $text .= escape_spaces($filename)." ";
+    foreach my $element (@array) {
+      $text .= escape_spaces($element)." ";
     }
     $text .= "\n";
     return $text;
+}
+
+# Replace spaces with the escape character
+sub escape_spaces {
+    my ($input_string) = @_;
+    $input_string =~ s/ /\\ /g;
+    return $input_string;
 }
 
 main();
