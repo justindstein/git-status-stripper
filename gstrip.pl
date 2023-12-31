@@ -2,50 +2,71 @@
 use strict;
 use warnings;
 
-# ANSI escape codes for text color
-my $green = "\e[92m";
-my $red = "\e[31m";
-# my $white = "\e[37m";
-
-my $added = $green;
-my $modified = $red;
+# ANSI color codes
+my $staged = "\e[32m";
+my $unstaged = "\e[31m";
 my $default = "\e[0m";
- 
-# while (<> ) {
-#   print "foo: $_";
-# }
 
-while (<>) {
-  # print "foo: $_";
+my $new_regex = qr/^\t(?:new\ file:\s*)(.*)$/;
+my $modified_regex = qr/^\t(?:deleted:\s*)(.*)$/;
+my $deleted_regex = qr/^\t(?:modified:\s*)(.*)$/;
+my $untracked_regex = qr/^\t(?:)(.*)$/;
 
-  if($_ =~ /^\t(?:new\ file:\s*)(.*)$/g) {
-  
-    # while ($_ =~ /^\t(?:deleted:\s*|modified:\s*|)(.*)$/g) {
-    my $foo = $1;
-    $foo =~ s/ /\\ /g; 
-    print $added."    $foo\n";
+my @new = ();
+my @modified = ();
+my @deleted = ();
+my @untracked = ();
+my @filenames = ();
 
-  } elsif($_ =~ /^\t(?:deleted:\s*|modified:\s*|)(.*)$/g) {
-    my $foo = $1;
-    $foo =~ s/ /\\ /g; 
-    print $modified."    $foo\n";
+# Main subroutine
+sub main {
+  while (<>) {
+    if($_ =~ $new_regex) {
+      push @new, $1;
+      push @filenames, $1;
 
-  } else {
-    print $default.$_;
+    } elsif($_ =~ $modified_regex) {
+      push @modified, $1;
+      push @filenames, $1;
+
+    } elsif($_ =~ $deleted_regex) {
+      push @deleted, $1;
+      push @filenames, $1;
+
+    } elsif($_ =~ $untracked_regex) {
+      push @untracked, $1;
+      push @filenames, $1;
+
+    } else {
+      if (@filenames) {
+        print to_string($staged, @filenames);
+        @filenames = ();
+      }
+      print $default."$_";
+    }
   }
 
-# foreach my $line ( <STDIN> ) {
-#   chomp( $line );
-  # print "$line\n";
 
-  # while ($line =~ /^\t(?:deleted:\s*|modified:\s*|)(.*)$/g) {
-  #   print "$1\n";
-  # }
-
-#   (?mx)↵
-# ^\t # Left padding↵
-# (?:deleted:\s*|modified:\s*|) # 'deleted:' or 'modified:' tags↵
-# (.*) # Capture all remaining text↵
-# $
-# }
 }
+
+sub escape_spaces {
+    my ($input_string) = @_;
+
+    # Replace spaces with the escape character
+    $input_string =~ s/ /\\ /g;
+
+    return $input_string;
+}
+
+sub to_string {
+    my ($color, @array) = @_;
+    my $text = $color."\t";
+
+    foreach my $filename (@filenames) {
+      $text .= escape_spaces($filename)." ";
+    }
+    $text .= "\n";
+    return $text;
+}
+
+main();
