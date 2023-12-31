@@ -68,7 +68,6 @@ sub main {
 
 sub array_to_string {
     my ($color, @array) = @_;
-    # my $text = $color."\t";
     my $text = "$color";
 
     foreach my $element (@array) {
