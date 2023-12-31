@@ -16,7 +16,7 @@ my $no_change = qr/no\ changes\ added\ to\ commit\ \(use\ \"git\ add\"\ and\/or\
 my $empty_line = qr/^\n$/;
 
 my @filenames = ();
-my $status;
+my $next_color = $default;
 my $empty_line_count = 0;
 
 sub main {
@@ -26,21 +26,24 @@ sub main {
 
     } elsif($_ =~ $staged_regex) {
       print_empty_lines();
+      $next_color = $staged;
       print $default."$_";
 
     } elsif($_ =~ $unstaged_regex) {
       if(@filenames) {
-        print "\t".array_to_string($staged, @filenames);
+        print "\t".array_to_string($next_color, @filenames);
         @filenames = ();
       }
+      $next_color = $unstaged;
       print_empty_lines();
       print $default."$_";
 
     } elsif($_ =~ $untracked_regex) {
       if(@filenames) {
-        print "\t".array_to_string($unstaged, @filenames);
+        print "\t".array_to_string($next_color, @filenames);
         @filenames = ();
       }
+      $next_color = $unstaged;
       print_empty_lines();
       print $default."$_";
 
@@ -57,7 +60,7 @@ sub main {
   }
 
   if(@filenames) {
-    print "\t".array_to_string($unstaged, @filenames);
+    print "\t".array_to_string($next_color, @filenames);
     @filenames = ();
   }
   print_empty_lines();
