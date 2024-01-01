@@ -30,21 +30,17 @@ sub main {
       print $default."$_";
 
     } elsif($_ =~ $unstaged_regex) {
-      if(@filenames) {
-        print "\t".array_to_string($next_color, @filenames);
-        @filenames = ();
-      }
-      $next_color = $unstaged;
+      print_filenames();
       print_empty_lines();
+
+      $next_color = $unstaged;
       print $default."$_";
 
     } elsif($_ =~ $untracked_regex) {
-      if(@filenames) {
-        print "\t".array_to_string($next_color, @filenames);
-        @filenames = ();
-      }
-      $next_color = $unstaged;
+      print_filenames();
       print_empty_lines();
+      
+      $next_color = $unstaged;
       print $default."$_";
 
     } elsif($_ =~ $empty_line) {
@@ -59,10 +55,7 @@ sub main {
     }
   }
 
-  if(@filenames) {
-    print "\t".array_to_string($next_color, @filenames);
-    @filenames = ();
-  }
+  print_filenames();
   print_empty_lines();
 }
 
@@ -82,6 +75,13 @@ sub escape_spaces {
     my ($input_string) = @_;
     $input_string =~ s/ /\\ /g;
     return $input_string;
+}
+
+sub print_filenames {
+  if(@filenames) {
+    print "\t".array_to_string($next_color, @filenames);
+    @filenames = ();
+  }
 }
 
 sub print_empty_lines {
